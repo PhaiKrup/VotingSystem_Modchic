@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงคะแนนรับรอง - หมู่บ้านแสนสราญ 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .logo-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .logo-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .logo-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .step {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #999;
+            position: relative;
+            z-index: 1;
+            font-size: 18px;
+        }
+        
+        .step.active {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 50%;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+        
+        .step-line.active {
+            background: #4CAF50;
+        }
+        
+        h2 {
+            color: #1976D2;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+        
+        .otp-input {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 10px;
+            font-weight: bold;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #1976D2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.secondary {
+            background: #757575;
+        }
+        
+        button.secondary:hover {
+            background: #616161;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .candidate-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+        
+        .candidate-section h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .candidate-option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .candidate-option:hover {
+            border-color: #2196F3;
+            transform: translateX(5px);
+        }
+        
+        .candidate-option.selected {
+            border-color: #2196F3;
+            background: #E3F2FD;
+        }
+        
+        .candidate-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .candidate-name {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .vote-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .vote-button {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .vote-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .vote-button.approve {
+            border-color: #4CAF50;
+        }
+        
+        .vote-button.approve:hover {
+            background: #E8F5E9;
+            border-color: #4CAF50;
+        }
+        
+        .vote-button.approve.selected {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .vote-button.reject {
+            border-color: #f44336;
+        }
+        
+        .vote-button.reject:hover {
+            background: #FFEBEE;
+            border-color: #f44336;
+        }
+        
+        .vote-button.reject.selected {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        
+        .vote-button-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .vote-button-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box p {
+            color: #1565C0;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-box p {
+            color: #E65100;
+            line-height: 1.6;
+        }
+        
+        .upload-section {
+            border: 2px dashed #2196F3;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f5f5f5;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            background: #E3F2FD;
+            border-color: #1976D2;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+        
+        .timer {
+            text-align: center;
+            color: #f44336;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .success-icon {
+            font-size: 72px;
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .error-message {
+            background: #FFEBEE;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .summary-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-label {
+            color: #666;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196F3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .vote-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-header">
+            <h1>🏘️ หมู่บ้านแสนสราญ 2</h1>
+            <p>ระบบลงคะแนนรับรองคณะกรรมการนิติบุคคล</p>
+        </div>
+        
+        <div class="card">
+            <div class="step-indicator">
+                <div class="step-line" id="stepLine"></div>
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+                <div class="step" id="step4">4</div>
+                <div class="step" id="step5">5</div>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <!-- Step 1: ยืนยันตัวตน -->
+            <div id="authSection" class="section active">
+                <h2>ยืนยันตัวตนผู้มีสิทธิ</h2>
+                
+                <div class="info-box">
+                    <p>กรุณากรอกบ้านเลขที่และเบอร์โทรศัพท์เพื่อรับ OTP</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>🏠 บ้านเลขที่</label>
+                    <input type="text" id="houseNumber" placeholder="เช่น 195/1">
+                </div>
+                
+                <div class="form-group">
+                    <label>📱 เบอร์โทรศัพท์ (สำหรับรับ OTP)</label>
+                    <input type="tel" id="phone" placeholder="08X-XXX-XXXX" maxlength="12">
+                </div>
+                
+                <button onclick="requestOTP()" id="requestOTPBtn">
+                    ขอรหัส OTP
+                </button>
+            </div>
+            
+            <!-- Step 2: ยืนยัน OTP -->
+            <div id="otpSection" class="section">
+                <h2>ยืนยันรหัส OTP</h2>
+                
+                <div class="info-box">
+                    <p>ระบบได้ส่งรหัส OTP ไปยังเบอร์ <strong id="phoneDisplay"></strong></p>
+                    <p>บ้านเลขที่: <strong id="houseDisplay"></strong></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>🔐 รหัส OTP (6 หลัก)</label>
+                    <input type="text" id="otp" class="otp-input" placeholder="000000" maxlength="6">
+                </div>
+                
+                <div class="timer">⏱️ เหลือเวลา <span id="countdown">5:00</span></div>
+                
+                <button onclick="verifyOTP()" id="verifyOTPBtn">
+                    ยืนยันรหัส
+                </button>
+                
+                <button onclick="backToAuth()" class="secondary">
+                    ย้อนกลับ
+                </button>
+            </div>
+            
+            <!-- Step 3: รับรองประธาน -->
+            <div id="presidentSection" class="section">
+                <h2>รับรองประธานกรรมการนิติบุคคล</h2>
+                
+                <div class="candidate-section">
+                    <h3>ผู้สมัครประธานกรรมการ</h3>
+                    <div class="candidate-option">
+                        <div class="candidate-name">พันเอก เฉลิมพล เจริญวงศ์</div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <p>กรุณาเลือกว่าท่านรับรองหรือไม่รับรองผู้สมัครประธานกรรมการ</p>
+                </div>
+                
+                <div class="vote-buttons">
+                    <div class="vote-button approve" onclick="votePresident('approve')">
+                        <div class="vote-button-icon">✅</div>
+                        <div class="vote-button-text">รับรอง</div>
+                    </div>
+                    <div class="vote-button reject" onclick="votePresident('reject')">
+                        <div class="vote-button-icon">❌</div>
+                        <div class="vote-button-text">ไม่รับรอง</div>
+                    </div>
+                </div>
+                
+                <button onclick="nextToCommittee()" id="nextPresidentBtn" disabled>
+                    ถัดไป
+                </button>
+            </div>
+            
+            <!-- Step 4: รับรองกรรมการ -->
+            <div id="committeeSection" class="section">
+                <h2>รับรองกรรมการนิติบุคคล</h2>
+                
+                <div class="candidate-section">
+                    <h3>รายชื่อผู้สมัครกรรมการทั้งหมด</h3>
+                    <div id="committeeList">
+                        <!-- จะถูกสร้างด้วย JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <p>กรุณาเลือกว่าท่านรับรองหรือไม่รับรองผู้สมัครกรรมการทั้งหมด</p>
+                </div>
+                
+                <div class="vote-buttons">
+                    <div class="vote-button approve" onclick="voteCommittee('approve')">
+                        <div class="vote-button-icon">✅</div>
+                        <div class="vote-button-text">รับรองทั้งหมด</div>
+                    </div>
+                    <div class="vote-button reject" onclick="voteCommittee('reject')">
+                        <div class="vote-button-icon">❌</div>
+                        <div class="vote-button-text">ไม่รับรองทั้งหมด</div>
+                    </div>
+                </div>
+                
+                <button onclick="nextToUpload()" id="nextCommitteeBtn" disabled>
+                    ถัดไป
+                </button>
+            </div>
+            
+            <!-- Step 5: อัปโหลดบัตรประชาชน -->
+            <div id="uploadSection" class="section">
+                <h2>ยืนยันตัวตนด้วยบัตรประชาชน</h2>
+                
+                <div class="warning-box">
+                    <p>⚠️ ข้อมูลบัตรประชาชนจะถูกเก็บเพื่อยืนยันการลงคะแนนเท่านั้น และจะถูกลบภายใน 7 วัน</p>
+                    <p>📷 กรุณาถ่ายรูปบัตรประชาชนโดยตรง ไม่อนุญาตให้เลือกจากไฟล์</p>
+                </div>
+                
+                <input type="file" id="idCardInput" accept="image/*" capture="camera" style="display: none;" onchange="handleFileSelect(event)">
+                
+                <div class="upload-section" onclick="document.getElementById('idCardInput').click()">
+                    <div class="upload-icon">📷</div>
+                    <p>แตะเพื่อถ่ายรูปบัตรประชาชน</p>
+                </div>
+                
+                <img id="preview-image" style="display: none;">
+                
+                <button onclick="confirmAndSubmit()" id="submitBtn" disabled>
+                    ยืนยันและส่งผลการลงคะแนน
+                </button>
+                
+                <button onclick="backToCommittee()" class="secondary">
+                    ย้อนกลับ
+                </button>
+            </div>
+            
+            <!-- สรุปผลและยืนยัน -->
+            <div id="summarySection" class="section">
+                <h2>สรุปผลการลงคะแนน</h2>
+                
+                <div class="summary-box">
+                    <div class="summary-item">
+                        <span class="summary-label">บ้านเลขที่:</span>
+                        <span class="summary-value" id="summaryHouse"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">ประธานกรรมการ:</span>
+                        <span class="summary-value" id="summaryPresident"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">กรรมการทั้งหมด:</span>
+                        <span class="summary-value" id="summaryCommittee"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">วันที่ลงคะแนน:</span>
+                        <span class="summary-value" id="summaryDate"></span>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <p>กรุณาตรวจสอบข้อมูลให้ถูกต้อง หากต้องการแก้ไขกรุณากดปุ่มย้อนกลับ</p>
+                </div>
+                
+                <button onclick="finalSubmit()" id="finalSubmitBtn">
+                    ✅ ยืนยันส่งผลการลงคะแนน
+                </button>
+                
+                <button onclick="editVote()" class="secondary">
+                    แก้ไขการลงคะแนน
+                </button>
+            </div>
+            
+            <!-- Success -->
+            <div id="successSection" class="section">
+                <div class="success-icon">✅</div>
+                <h2 style="text-align: center; color: #4CAF50;">ส่งผลการลงคะแนนสำเร็จ!</h2>
+                
+                <div class="info-box" style="background: #E8F5E9; border-color: #4CAF50;">
+                    <p style="color: #2E7D32;">ระบบได้บันทึกผลการลงคะแนนของท่านเรียบร้อยแล้ว</p>
+                    <p style="color: #2E7D32;">รหัสอ้างอิง: <strong id="refCode"></strong></p>
+                </div>
+                
+                <p style="text-align: center; margin-top: 20px; color: #666;">
+                    ขอบคุณที่ร่วมลงคะแนนรับรองคณะกรรมการนิติบุคคล
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลผู้มีสิทธิ (จากไฟล์ Excel)
+        const votersData = {
+            "195/1": { name: "คุณธนะวรรธน์ รัฐวุฒิโรจน์", phone: "086-5555900" },
+            "195/2": { name: "คุณพิชญาภรณ์ รังคกูลนุวัฒน์", phone: "085-5536880" },
+            "195/3": { name: "คุณพิชญาภรณ์ รังคกูลนุวัฒน์" },
+            "195/4": { name: "คุณวิษณุศักดิ์ ศิริรัตน์และคุณวีรพล ศิริรัตน์" },
+            // เพิ่มข้อมูลทั้งหมด 317 บ้าน...
+        };
+        
+        // รายชื่อกรรมการ
+        const committeeMembers = [
+            "รศ. ภูมน สุขวงศ์",
+            "คุณวิชาดา กันธิยะนันท์",
+            "คุณ กฤตณัท เจริญวงศ์",
+            "คุณวรวิทย์ สกุลทักษิณ",
+            "คุณเยเหลียง จาง",
+            "พันเอก มนัส ปานเนตร",
+            "คุณ ณภัทร ชัยวงศ์เวช",
+            "ผศ. ดร. กรวิทย์ ไชยสุ"
+        ];
+        
+        // State Management
+        let currentStep = 1;
+        let votingData = {
+            houseNumber: '',
+            phone: '',
+            presidentVote: '',
+            committeeVote: '',
+            idCardImage: null,
+            voterName: ''
+        };
+        let otpData = null;
+        let countdownInterval = null;
+        let hasVoted = {}; // จำลองการเก็บข้อมูลบ้านที่โหวตแล้ว
+        
+        // Initialize committee list
+        window.addEventListener('DOMContentLoaded', function() {
+            const committeeList = document.getElementById('committeeList');
+            committeeMembers.forEach((member, index) => {
+                const div = document.createElement('div');
+                div.className = 'candidate-option';
+                div.innerHTML = `<div class="candidate-name">${index + 1}. ${member}</div>`;
+                committeeList.appendChild(div);
+            });
+        });
+        
+        // Format phone number
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value;
+            value = value.replace(/\D/g, '');
+            
+            if (value.length >= 6) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+            } else if (value.length >= 3) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Auto submit OTP when 6 digits
+        document.getElementById('otp').addEventListener('input', function(e) {
+            if (e.target.value.length === 6) {
+                verifyOTP();
+            }
+        });
+        
+        // Utility Functions
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function updateStepIndicator(step) {
+            currentStep = step;
+            for (let i = 1; i <= 5; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                stepEl.classList.remove('active', 'completed');
+                
+                if (i < step) {
+                    stepEl.classList.add('completed');
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                }
+            }
+            
+            // Update step line
+            const progress = ((step - 1) / 4) * 100;
+            document.getElementById('stepLine').style.width = progress + '%';
+            document.getElementById('stepLine').classList.add('active');
+        }
+        
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+        
+        // Step 1: Request OTP
+        async function requestOTP() {
+            const houseNumber = document.getElementById('houseNumber').value.trim();
+            const phone = document.getElementById('phone').value.replace(/-/g, '');
+            
+            // Validation
+            if (!houseNumber) {
+                showError('กรุณากรอกบ้านเลขที่');
+                return;
+            }
+            
+            if (phone.length !== 10) {
+                showError('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
+                return;
+            }
+            
+            // Check if house exists
+            if (!votersData[houseNumber]) {
+                showError('ไม่พบบ้านเลขที่นี้ในระบบ');
+                return;
+            }
+            
+            // Check if already voted
+            if (hasVoted[houseNumber]) {
+                showError('บ้านเลขที่นี้ได้ลงคะแนนไปแล้ว');
+                return;
+            }
+            
+            // Store data
+            votingData.houseNumber = houseNumber;
+            votingData.phone = phone;
+            votingData.voterName = votersData[houseNumber].name;
+            
+            // Show loading
+            const btn = document.getElementById('requestOTPBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'กำลังส่ง OTP... <span class="loading"></span>';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Generate OTP
+                otpData = {
+                    code: Math.floor(100000 + Math.random() * 900000).toString(),
+                    expires: Date.now() + 300000 // 5 minutes
+                };
+                
+                // Show OTP section
+                document.getElementById('phoneDisplay').textContent = 
+                    phone.slice(0, 3) + '-' + phone.slice(3, 6) + '-' + phone.slice(6);
+                document.getElementById('houseDisplay').textContent = houseNumber;
+                
+                showSection('otpSection');
+                updateStepIndicator(2);
+                startCountdown();
+                
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = 'ขอรหัส OTP';
+                
+                // Demo: Show OTP
+                console.log('OTP Code:', otpData.code);
+                alert(`[Demo Mode] รหัส OTP ของคุณคือ: ${otpData.code}`);
+            }, 1500);
+        }
+        
+        // Countdown timer
+        function startCountdown() {
+            let seconds = 300; // 5 minutes
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('countdown').textContent = 
+                    `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    showError('รหัส OTP หมดอายุ กรุณาขอรหัสใหม่');
+                    showSection('authSection');
+                    updateStepIndicator(1);
+                }
+            }, 1000);
+        }
+        
+        // Step 2: Verify OTP
+        async function verifyOTP() {
+            const otp = document.getElementById('otp').value;
+            
+            if (otp.length !== 6) {
+                showError('กรุณากรอกรหัส OTP 6 หลัก');
+                return;
+            }
+            
+            if (otp !== otpData.code) {
+                showError('รหัส OTP ไม่ถูกต้อง');
+                return;
+            }
+            
+            if (Date.now() > otpData.expires) {
+                showError('รหัส OTP หมดอายุ');
+                return;
+            }
+            
+            // Clear countdown
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // Show loading
+            const btn = document.getElementById('verifyOTPBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'กำลังตรวจสอบ... <span class="loading"></span>';
+            
+            setTimeout(() => {
+                showSection('presidentSection');
+                updateStepIndicator(3);
+                
+                btn.disabled = false;
+                btn.innerHTML = 'ยืนยันรหัส';
+            }, 1000);
+        }
+        
+        // Vote for president
+        function votePresident(choice) {
+            votingData.presidentVote = choice;
+            
+            // Update UI
+            document.querySelectorAll('#presidentSection .vote-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (choice === 'approve') {
+                document.querySelector('#presidentSection .vote-button.approve').classList.add('selected');
+            } else {
+                document.querySelector('#presidentSection .vote-button.reject').classList.add('selected');
+            }
+            
+            // Enable next button
+            document.getElementById('nextPresidentBtn').disabled = false;
+        }
+        
+        // Next to committee
+        function nextToCommittee() {
+            if (!votingData.presidentVote) {
+                showError('กรุณาเลือกรับรองหรือไม่รับรอง');
+                return;
+            }
+            
+            showSection('committeeSection');
+            updateStepIndicator(4);
+        }
+        
+        // Vote for committee
+        function voteCommittee(choice) {
+            votingData.committeeVote = choice;
+            
+            // Update UI
+            document.querySelectorAll('#committeeSection .vote-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (choice === 'approve') {
+                document.querySelector('#committeeSection .vote-button.approve').classList.add('selected');
+            } else {
+                document.querySelector('#committeeSection .vote-button.reject').classList.add('selected');
+            }
+            
+            // Enable next button
+            document.getElementById('nextCommitteeBtn').disabled = false;
+        }
+        
+        // Next to upload
+        function nextToUpload() {
+            if (!votingData.committeeVote) {
+                showError('กรุณาเลือกรับรองหรือไม่รับรอง');
+                return;
+            }
+            
+            showSection('uploadSection');
+            updateStepIndicator(5);
+        }
+        
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 10MB)');
+                return;
+            }
+            
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview-image');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                // Store image data
+                votingData.idCardImage = e.target.result;
+                
+                // Enable submit button
+                document.getElementById('submitBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Confirm and submit
+        function confirmAndSubmit() {
+            if (!votingData.idCardImage) {
+                showError('กรุณาถ่ายรูปบัตรประชาชน');
+                return;
+            }
+            
+            // Update summary
+            document.getElementById('summaryHouse').textContent = votingData.houseNumber;
+            document.getElementById('summaryPresident').textContent = 
+                votingData.presidentVote === 'approve' ? '✅ รับรอง' : '❌ ไม่รับรอง';
+            document.getElementById('summaryCommittee').textContent = 
+                votingData.committeeVote === 'approve' ? '✅ รับรอง' : '❌ ไม่รับรอง';
+            document.getElementById('summaryDate').textContent = 
+                new Date().toLocaleString('th-TH');
+            
+            showSection('summarySection');
+        }
+        
+        // Final submit
+        async function finalSubmit() {
+            const btn = document.getElementById('finalSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'กำลังบันทึกข้อมูล... <span class="loading"></span>';
+            
+            // Simulate API call to save data
+            setTimeout(() => {
+                // Mark as voted
+                hasVoted[votingData.houseNumber] = true;
+                
+                // Generate reference code
+                const refCode = 'REF' + Date.now().toString().slice(-8);
+                document.getElementById('refCode').textContent = refCode;
+                
+                // Show success
+                showSection('successSection');
+                
+                // Log data (in real app, send to Google Sheets)
+                console.log('Vote submitted:', {
+                    ...votingData,
+                    refCode: refCode,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Send SMS notification (simulated)
+                console.log(`SMS sent to ${votingData.phone}: ขอบคุณที่ลงคะแนน รหัสอ้างอิง: ${refCode}`);
+            }, 2000);
+        }
+        
+        // Edit vote
+        function editVote() {
+            showSection('presidentSection');
+            updateStepIndicator(3);
+        }
+        
+        // Navigation functions
+        function backToAuth() {
+            showSection('authSection');
+            updateStepIndicator(1);
+        }
+        
+        function backToCommittee() {
+            showSection('committeeSection');
+            updateStepIndicator(4);
+        }
+            
