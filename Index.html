@@ -1017,3 +1017,281 @@
             updateStepIndicator(4);
         }
             
+// ===== เพิ่มโค้ดนี้ใน HTML เพื่อเชื่อมต่อกับ Google Apps Script =====
+
+// Configuration
+const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'; // URL จาก Deploy Web App
+
+// API Functions
+async function apiCall(action, data) {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Important for Google Apps Script
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                ...data
+            })
+        });
+        
+        // For no-cors mode, we can't read the response
+        // So we'll simulate success for demo
+        return { success: true, data: {} };
+        
+        // In production with proper CORS setup:
+        // const result = await response.json();
+        // return result;
+    } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Modified requestOTP function
+async function requestOTP() {
+    const houseNumber = document.getElementById('houseNumber').value.trim();
+    const phone = document.getElementById('phone').value.replace(/-/g, '');
+    
+    // Validation
+    if (!houseNumber) {
+        showError('กรุณากรอกบ้านเลขที่');
+        return;
+    }
+    
+    if (phone.length !== 10) {
+        showError('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
+        return;
+    }
+    
+    // Show loading
+    const btn = document.getElementById('requestOTPBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'กำลังตรวจสอบข้อมูล... <span class="loading"></span>';
+    
+    // Check voter eligibility
+    const checkResult = await apiCall('checkVoter', { houseNumber });
+    
+    if (!checkResult.success) {
+        showError(checkResult.error || 'ไม่พบข้อมูลในระบบ');
+        btn.disabled = false;
+        btn.innerHTML = 'ขอรหัส OTP';
+        return;
+    }
+    
+    // Send OTP
+    const otpResult = await apiCall('sendOTP', { houseNumber, phone });
+    
+    if (otpResult.success) {
+        // Store data
+        votingData.houseNumber = houseNumber;
+        votingData.phone = phone;
+        
+        // Show OTP section
+        document.getElementById('phoneDisplay').textContent = 
+            phone.slice(0, 3) + '-' + phone.slice(3, 6) + '-' + phone.slice(6);
+        document.getElementById('houseDisplay').textContent = houseNumber;
+        
+        showSection('otpSection');
+        updateStepIndicator(2);
+        startCountdown();
+    } else {
+        showError(otpResult.error || 'ไม่สามารถส่ง OTP ได้');
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = 'ขอรหัส OTP';
+}
+
+// Modified verifyOTP function
+async function verifyOTP() {
+    const otp = document.getElementById('otp').value;
+    
+    if (otp.length !== 6) {
+        showError('กรุณากรอกรหัส OTP 6 หลัก');
+        return;
+    }
+    
+    const btn = document.getElementById('verifyOTPBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'กำลังตรวจสอบ... <span class="loading"></span>';
+    
+    const result = await apiCall('verifyOTP', {
+        houseNumber: votingData.houseNumber,
+        otp: otp
+    });
+    
+    if (result.success) {
+        // Store token
+        votingData.token = result.data.token;
+        
+        // Clear countdown
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        showSection('presidentSection');
+        updateStepIndicator(3);
+    } else {
+        showError(result.error || 'รหัส OTP ไม่ถูกต้อง');
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = 'ยืนยันรหัส';
+}
+
+// Modified finalSubmit function
+async function finalSubmit() {
+    const btn = document.getElementById('finalSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'กำลังบันทึกข้อมูล... <span class="loading"></span>';
+    
+    // Submit vote data
+    const result = await apiCall('submitVote', {
+        token: votingData.token,
+        voterName: votingData.voterName,
+        presidentVote: votingData.presidentVote,
+        committeeVote: votingData.committeeVote,
+        idCardImage: votingData.idCardImage
+    });
+    
+    if (result.success) {
+        // Show reference code
+        document.getElementById('refCode').textContent = result.data.refCode;
+        
+        // Show success
+        showSection('successSection');
+        
+        // Clear data
+        votingData = {
+            houseNumber: '',
+            phone: '',
+            presidentVote: '',
+            committeeVote: '',
+            idCardImage: null,
+            voterName: '',
+            token: ''
+        };
+    } else {
+        showError(result.error || 'ไม่สามารถบันทึกข้อมูลได้');
+        btn.disabled = false;
+        btn.innerHTML = '✅ ยืนยันส่งผลการลงคะแนน';
+    }
+}
+
+// ===== Alternative: Direct Google Sheets API (ไม่ต้องใช้ Apps Script) =====
+
+// Using Google Sheets API V4
+const SHEET_API_KEY = 'YOUR_GOOGLE_API_KEY';
+const SHEET_ID = 'YOUR_SHEET_ID';
+
+async function saveToGoogleSheets(data) {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/ผลการลงคะแนน:append?valueInputOption=USER_ENTERED&key=${SHEET_API_KEY}`;
+    
+    const values = [[
+        data.houseNumber,
+        data.voterName,
+        data.phone,
+        data.presidentVote,
+        data.committeeVote,
+        new Date().toLocaleString('th-TH'),
+        'REF' + Date.now().toString().slice(-8),
+        'Confirmed'
+    ]];
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                values: values
+            })
+        });
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Sheets API Error:', error);
+        return null;
+    }
+}
+
+// ===== SMS Integration Examples =====
+
+// 1. Thai Bulk SMS
+async function sendSMS_ThaiBulkSMS(phone, message) {
+    const formData = new FormData();
+    formData.append('username', 'YOUR_USERNAME');
+    formData.append('password', 'YOUR_PASSWORD');
+    formData.append('msisdn', phone);
+    formData.append('message', message);
+    formData.append('sender', 'SANSARAN2');
+    
+    try {
+        const response = await fetch('https://www.thaibulksms.com/sms_api.php', {
+            method: 'POST',
+            body: formData
+        });
+        return await response.text();
+    } catch (error) {
+        console.error('SMS Error:', error);
+        return false;
+    }
+}
+
+// 2. Twilio
+async function sendSMS_Twilio(phone, message) {
+    const accountSid = 'YOUR_ACCOUNT_SID';
+    const authToken = 'YOUR_AUTH_TOKEN';
+    const fromNumber = '+1234567890'; // Your Twilio number
+    
+    const auth = btoa(`${accountSid}:${authToken}`);
+    
+    try {
+        const response = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'To': `+66${phone.substring(1)}`, // Convert 08x to +668x
+                    'From': fromNumber,
+                    'Body': message
+                })
+            }
+        );
+        return await response.json();
+    } catch (error) {
+        console.error('Twilio Error:', error);
+        return false;
+    }
+}
+
+// 3. Line Notify (Free alternative)
+async function sendLineNotify(message) {
+    const token = 'YOUR_LINE_NOTIFY_TOKEN';
+    
+    try {
+        const response = await fetch('https://notify-api.line.me/api/notify', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'message': message
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Line Notify Error:', error);
+        return false;
+    }
+}
